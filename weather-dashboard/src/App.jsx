@@ -1,5 +1,7 @@
 import { useState } from "react";
 import SearchBar from "./components/SearchBar";
+import WeatherCard from "./components/WeatherCard";
+import ErrorMessage from "./components/ErrorMessage";
 
 function App() {
   const [weather, setWeather] = useState(null);
@@ -39,22 +41,18 @@ function App() {
 
       <SearchBar onSearch={handleSearch} />
 
+      {/* Weather display */}
+      <WeatherCard weather={weather} />
+
       {loading && (
         <p className="text-center mt-4">Loading...</p>
       )}
 
       {error && (
-        <p className="text-center mt-4 text-red-600">{error}</p>
-      )}
-
-      {weather && (
-        <pre className="mt-6 bg-white p-4 rounded-lg max-w-md mx-auto overflow-x-auto">
-          {JSON.stringify(weather, null, 2)}
-        </pre>
+        <ErrorMessage message={error} />
       )}
     </div>
   );
 }
 
 export default App;
-console.log(import.meta.env.VITE_WEATHER_API_KEY);
