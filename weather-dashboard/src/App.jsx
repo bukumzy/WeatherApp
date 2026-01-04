@@ -2,11 +2,15 @@ import { useState } from "react";
 import SearchBar from "./components/SearchBar";
 import WeatherCard from "./components/WeatherCard";
 import ErrorMessage from "./components/ErrorMessage";
+import Forecast from "./components/Forecast";
+
 
 function App() {
   const [weather, setWeather] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [forecast, setForecast] = useState([]);
+
 
   const API_KEY = import.meta.env.VITE_WEATHER_API_KEY;
 
@@ -14,26 +18,31 @@ function App() {
   setLoading(true);
   setError("");
   setWeather(null);
+  setForecast([]);
 
   try {
-    const response = await fetch(
+    const weatherResponse = await fetch(
       `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`
     );
 
-    if (response.status === 401) {
-      throw new Error("API key is invalid or not activated");
+    if (!weatherResponse.ok) {
+      throw new Error("City not found");
     }
 
-    if (response.status === 404) {
-      throw new Error("City not found. Please check the spelling.");
-    }
+    const weatherData = await weatherResponse.json();
+    setWeather(weatherData);
 
-    if (!response.ok) {
-      throw new Error("Something went wrong. Please try again.");
-    }
+    const forecastResponse = await fetch(
+      `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${API_KEY}&units=metric`
+    );
 
-    const data = await response.json();
-    setWeather(data);
+    const forecastData = await forecastResponse.json();
+
+    // Pick one forecast per day (every 24hrs)
+    const dailyForecast = forecastData.list.filter((item, index) => index % 8 === 0).slice(0, 3);
+
+    setForecast(dailyForecast);
+
   } catch (err) {
     setError(err.message);
   } finally {
@@ -42,17 +51,19 @@ function App() {
 };
 
 
-  return (
-    <div className="min-h-screen bg-gray-100 p-4">
-      <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-center mb-6">
-          Weather Dashboard
-      </h1>
 
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-sky-400 via-blue-500 to-indigo-600 p-4">
+        <h1 className="text-3xl font-extrabold text-white text-center mb-6 drop-shadow">
+          Weather Dashboard
+        </h1>
 
       <SearchBar onSearch={handleSearch} />
 
       {/* Weather display */}
       <WeatherCard weather={weather} />
+      <Forecast forecast={forecast} />
+
       {weather && (
         <div className="text-center mt-4">
           <button
